@@ -1,0 +1,120 @@
+
+.student-form-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 15px;
+  background-color: #f1f5f9;
+  box-sizing: border-box;
+}
+
+.student-form-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.student-form-card h2 {
+  text-align: center;
+  color: #1e3a5f;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 7px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-group .input-error,
+.form-group .input-error:focus {
+  border: 1px solid #dc2626;
+  box-shadow: 0 0 0 3px rgba(83, 188, 12, 0.1);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.error-message {
+  margin: 7px 0 0;
+  color: #dc2626;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.register-button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.register-button:hover {
+  background-color: #1d4ed8;
+  transition: background-color 1s;
+}
+.register-button:hover{
+  background-color: red;
+}
+
+.success-message {
+  margin: 20px 0 0;
+  padding: 12px;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  background-color: #f0fdf4;
+  color: #166534;
+  text-align: center;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .student-form-card {
+    padding: 22px;
+  }
+
+  .student-form-card h2 {
+    font-size: 22px;
+  }
+}

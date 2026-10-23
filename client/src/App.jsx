@@ -11,10 +11,13 @@ import Contactus from './pages/Contact-Us.jsx';
 import PrivacyPolicies from './pages/Privacy-Policies.jsx';
 import PageNotFound from './pages/404Error.jsx';
 
+import StudentForm from './components/StudentForm';
+
 function App() {
   return (
     <BrowserRouter>
-      <div className="app-layout">
+    <StudentForm />
+      {/* <div className="app-layout">
         <Navbar />
 
         <main>
@@ -32,7 +35,7 @@ function App() {
         </main>
 
         <Footer />
-      </div>
+      </div> */}
     </BrowserRouter>
   );
 }
