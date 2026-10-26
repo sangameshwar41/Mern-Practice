@@ -12,11 +12,21 @@ import PrivacyPolicies from './pages/Privacy-Policies.jsx';
 import PageNotFound from './pages/404Error.jsx';
 
 import StudentForm from './components/StudentForm';
+import StudentList from './components/StudentList.jsx'
+import StudentDetails from './components/StudentDetails';
+
+import StudentManagement from './components/StudentManagement.jsx';
+
 
 function App() {
   return (
     <BrowserRouter>
-    <StudentForm />
+    {/*<StudentForm />
+    <StudentList />
+    <StudentDetails  studentId="6adb609e3f1524e76169356a"/>*/}
+    <div className="app-layout">
+                <StudentManagement />
+            </div>
       {/* <div className="app-layout">
         <Navbar />
 

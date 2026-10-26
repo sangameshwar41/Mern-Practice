@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./db");
@@ -7,6 +8,14 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+app.use(cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
+}));
+
+
+app.options(/.*/, cors());
 app.use(express.json());
 
 // Home route
