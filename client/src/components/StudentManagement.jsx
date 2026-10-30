@@ -1,5 +1,5 @@
-
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import StudentForm from './StudentForm';
 import StudentList from './StudentList';
@@ -8,6 +8,8 @@ import StudentDetails from './StudentDetails';
 function StudentManagement() {
     const [editingStudentId, setEditingStudentId] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
+
+    const navigate = useNavigate();
 
     function handleEdit(studentId) {
         setEditingStudentId(studentId);
@@ -21,12 +23,30 @@ function StudentManagement() {
         });
     }
 
+    function handleCreateSuccess() {
+        setRefreshKey(function (previousKey) {
+            return previousKey + 1;
+        });
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        navigate('/login');
+    }
+
     return (
         <div>
+            <button onClick={handleLogout}>
+                Logout
+            </button>
+
             <StudentForm
                 key={editingStudentId || 'new-student'}
                 studentId={editingStudentId}
                 onUpdateSuccess={handleUpdateSuccess}
+                onCreateSuccess={handleCreateSuccess}
             />
 
             <StudentList

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import FormInput from './FormInput';
 import {
@@ -8,7 +7,11 @@ import {
 } from '../api/studentApi';
 import './StudentForm.css';
 
-function StudentForm({ studentId, onUpdateSuccess }) {
+function StudentForm({
+    studentId,
+    onUpdateSuccess,
+    onCreateSuccess
+}) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [mobile, setMobile] = useState('');
@@ -104,6 +107,7 @@ function StudentForm({ studentId, onUpdateSuccess }) {
 
             if (studentId) {
                 await updateStudent(studentId, studentData);
+
                 setSuccess('Student updated successfully!');
 
                 if (onUpdateSuccess) {
@@ -111,7 +115,12 @@ function StudentForm({ studentId, onUpdateSuccess }) {
                 }
             } else {
                 await createStudent(studentData);
+
                 setSuccess('Student registered successfully!');
+
+                if (onCreateSuccess) {
+                    onCreateSuccess();
+                }
 
                 setName('');
                 setEmail('');
@@ -188,9 +197,9 @@ function StudentForm({ studentId, onUpdateSuccess }) {
                             <option value="Other">Other</option>
                         </select>
 
-                        {errors.gender && 
+                        {errors.gender && (
                             <p className="error-message">{errors.gender}</p>
-                        }
+                        )}
                     </div>
 
                     <div className="form-group">

@@ -1,9 +1,16 @@
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Reusable function for sending requests to the backend
 async function request(url, options = {}) {
-    const response = await fetch(`${API_BASE_URL}${url}`, options);
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+        ...options,
+        headers: {
+            ...options.headers,
+            Authorization: `Bearer ${token}`
+        }
+    });
 
     const result = await response.json();
 
@@ -14,9 +21,28 @@ async function request(url, options = {}) {
     return result;
 }
 
-// Get all students
-export function getAllStudents() {
-    return request("/students");
+// Get students with search, filters, sorting, and pagination
+export function getAllStudents(filters = {}) {
+    const queryParams = new URLSearchParams();
+
+    if (filters.search) {
+        queryParams.set("search", filters.search);
+    }
+
+    if (filters.course) {
+        queryParams.set("course", filters.course);
+    }
+
+    if (filters.gender) {
+        queryParams.set("gender", filters.gender);
+    }
+
+    queryParams.set("sortBy", filters.sortBy || "createdAt");
+    queryParams.set("order", filters.order || "desc");
+    queryParams.set("page", filters.page || 1);
+    queryParams.set("limit", filters.limit || 10);
+
+    return request(`/students?${queryParams.toString()}`);
 }
 
 // Get one student by ID

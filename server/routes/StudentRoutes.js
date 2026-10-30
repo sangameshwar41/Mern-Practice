@@ -1,6 +1,8 @@
 const express = require("express");
 
 const router = express.Router();
+const authMiddleware = require("../middleware/authMiddleware");
+
 
 const {
     getAllStudents,
@@ -9,6 +11,9 @@ const {
     updateStudent,
     deleteStudent
 } = require("../controllers/StudentController");
+
+// Activate authentication for all student routes
+router.use(authMiddleware);
 
 // Get all students
 router.get("/", getAllStudents);

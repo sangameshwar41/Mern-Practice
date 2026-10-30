@@ -38,7 +38,13 @@ const studentSchema = new mongoose.Schema(
     }
 );
 
-// model creation
+// Indexes for student listing
+studentSchema.index({ fullName: 1 });
+studentSchema.index({ course: 1 });
+studentSchema.index({ gender: 1 });
+studentSchema.index({ createdAt: -1 });
+
+// Create the Student model
 const Student = mongoose.model("Student", studentSchema);
 
 module.exports = Student;
