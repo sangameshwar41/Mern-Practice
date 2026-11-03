@@ -1,28 +1,57 @@
-import { useEffect, useState } from 'react';
-import FormInput from './FormInput';
+
+import { useEffect, useState } from "react";
+import FormInput from "./FormInput";
 import {
     createStudent,
     getStudentById,
     updateStudent
-} from '../api/studentApi';
-import './StudentForm.css';
+} from "../api/studentApi";
+import { getAllCourses } from "../api/courseApi";
+import "./StudentForm.css";
 
 function StudentForm({
     studentId,
     onUpdateSuccess,
     onCreateSuccess
 }) {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [mobile, setMobile] = useState('');
-    const [gender, setGender] = useState('');
-    const [course, setCourse] = useState('');
-    const [address, setAddress] = useState('');
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [mobile, setMobile] = useState("");
+    const [gender, setGender] = useState("");
+    const [course, setCourse] = useState("");
+    const [courses, setCourses] = useState([]);
+    const [address, setAddress] = useState("");
 
     const [errors, setErrors] = useState({});
-    const [success, setSuccess] = useState('');
+    const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
-    const [apiError, setApiError] = useState('');
+    const [coursesLoading, setCoursesLoading] = useState(true);
+    const [apiError, setApiError] = useState("");
+
+    useEffect(function () {
+        async function fetchCourses() {
+            try {
+                setCoursesLoading(true);
+                setApiError("");
+
+                const result = await getAllCourses();
+
+                const activeCourses = (result.courses || []).filter(
+                    function (item) {
+                        return item.status === "active";
+                    }
+                );
+
+                setCourses(activeCourses);
+            } catch (error) {
+                setApiError(error.message);
+            } finally {
+                setCoursesLoading(false);
+            }
+        }
+
+        fetchCourses();
+    }, []);
 
     useEffect(function () {
         async function fetchStudent() {
@@ -32,18 +61,26 @@ function StudentForm({
 
             try {
                 setLoading(true);
-                setApiError('');
-                setSuccess('');
+                setApiError("");
+                setSuccess("");
 
                 const result = await getStudentById(studentId);
                 const student = result.data;
 
-                setName(student.fullName);
-                setEmail(student.email);
-                setMobile(student.mobileNumber);
-                setGender(student.gender);
-                setCourse(student.course);
-                setAddress(student.address);
+                setName(student.fullName || "");
+                setEmail(student.email || "");
+                setMobile(student.mobileNumber || "");
+                setGender(student.gender || "");
+
+                // The backend populates course as an object.
+                // Use its ID as the selected dropdown value.
+                setCourse(
+                    student.course && student.course._id
+                        ? student.course._id
+                        : student.course || ""
+                );
+
+                setAddress(student.address || "");
             } catch (error) {
                 setApiError(error.message);
             } finally {
@@ -59,35 +96,35 @@ function StudentForm({
 
         const newErrors = {};
 
-        if (name.trim() === '') {
-            newErrors.name = 'Name is required';
+        if (name.trim() === "") {
+            newErrors.name = "Name is required";
         }
 
-        if (email.trim() === '') {
-            newErrors.email = 'Email is required';
+        if (email.trim() === "") {
+            newErrors.email = "Email is required";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            newErrors.email = 'Enter a valid email address';
+            newErrors.email = "Enter a valid email address";
         }
 
         if (!/^[0-9]{10}$/.test(mobile)) {
-            newErrors.mobile = 'Enter a valid 10-digit mobile number';
+            newErrors.mobile = "Enter a valid 10-digit mobile number";
         }
 
-        if (gender === '') {
-            newErrors.gender = 'Please select gender';
+        if (gender === "") {
+            newErrors.gender = "Please select gender";
         }
 
-        if (course === '') {
-            newErrors.course = 'Please select a course';
+        if (course === "") {
+            newErrors.course = "Please select a course";
         }
 
-        if (address.trim() === '') {
-            newErrors.address = 'Address is required';
+        if (address.trim() === "") {
+            newErrors.address = "Address is required";
         }
 
         setErrors(newErrors);
-        setApiError('');
-        setSuccess('');
+        setApiError("");
+        setSuccess("");
 
         if (Object.keys(newErrors).length > 0) {
             return;
@@ -108,7 +145,7 @@ function StudentForm({
             if (studentId) {
                 await updateStudent(studentId, studentData);
 
-                setSuccess('Student updated successfully!');
+                setSuccess("Student updated successfully!");
 
                 if (onUpdateSuccess) {
                     onUpdateSuccess();
@@ -116,18 +153,19 @@ function StudentForm({
             } else {
                 await createStudent(studentData);
 
-                setSuccess('Student registered successfully!');
+                setSuccess("Student registered successfully!");
 
                 if (onCreateSuccess) {
                     onCreateSuccess();
                 }
 
-                setName('');
-                setEmail('');
-                setMobile('');
-                setGender('');
-                setCourse('');
-                setAddress('');
+                setName("");
+                setEmail("");
+                setMobile("");
+                setGender("");
+                setCourse("");
+                setAddress("");
+                setErrors({});
             }
         } catch (error) {
             setApiError(error.message);
@@ -141,8 +179,8 @@ function StudentForm({
             <div className="student-form-card">
                 <h2>
                     {studentId
-                        ? 'Edit Student'
-                        : 'Student Registration Form'}
+                        ? "Edit Student"
+                        : "Student Registration Form"}
                 </h2>
 
                 <form onSubmit={handleSubmit} noValidate>
@@ -183,13 +221,14 @@ function StudentForm({
                     />
 
                     <div className="form-group">
-                        <label>Gender</label>
+                        <label htmlFor="gender">Gender</label>
                         <select
+                            id="gender"
                             value={gender}
                             onChange={function (event) {
                                 setGender(event.target.value);
                             }}
-                            className={errors.gender ? 'input-error' : ''}
+                            className={errors.gender ? "input-error" : ""}
                         >
                             <option value="">Select Gender</option>
                             <option value="Male">Male</option>
@@ -203,18 +242,31 @@ function StudentForm({
                     </div>
 
                     <div className="form-group">
-                        <label>Course</label>
+                        <label htmlFor="course">Course</label>
                         <select
+                            id="course"
                             value={course}
                             onChange={function (event) {
                                 setCourse(event.target.value);
                             }}
-                            className={errors.course ? 'input-error' : ''}
+                            className={errors.course ? "input-error" : ""}
+                            disabled={coursesLoading || courses.length === 0}
                         >
-                            <option value="">Select Course</option>
-                            <option value="CSE">Computer Science</option>
-                            <option value="ECE">Electronics</option>
-                            <option value="EEE">Electrical</option>
+                            <option value="">
+                                {coursesLoading
+                                    ? "Loading courses..."
+                                    : courses.length === 0
+                                        ? "No active courses available"
+                                        : "Select Course"}
+                            </option>
+
+                            {courses.map(function (item) {
+                                return (
+                                    <option key={item._id} value={item._id}>
+                                        {item.courseName} ({item.courseCode})
+                                    </option>
+                                );
+                            })}
                         </select>
 
                         {errors.course && (
@@ -223,13 +275,14 @@ function StudentForm({
                     </div>
 
                     <div className="form-group">
-                        <label>Address</label>
+                        <label htmlFor="address">Address</label>
                         <textarea
+                            id="address"
                             value={address}
                             onChange={function (event) {
                                 setAddress(event.target.value);
                             }}
-                            className={errors.address ? 'input-error' : ''}
+                            className={errors.address ? "input-error" : ""}
                             placeholder="Enter your address"
                         />
 
@@ -241,11 +294,11 @@ function StudentForm({
                     <button
                         type="submit"
                         className="register-button"
-                        disabled={loading}
+                        disabled={loading || coursesLoading || courses.length === 0}
                     >
                         {loading
-                            ? (studentId ? 'Updating...' : 'Registering...')
-                            : (studentId ? 'Update Student' : 'Register')}
+                            ? (studentId ? "Updating..." : "Registering...")
+                            : (studentId ? "Update Student" : "Register")}
                     </button>
                 </form>
 

@@ -130,7 +130,9 @@ async function loginUser(req, res) {
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                role: user.role || "viewer"
+
             }
         });
     } catch (error) {
@@ -158,7 +160,8 @@ async function getUserProfile(req, res) {
             user: {
                 id: user._id,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                role: user.role || "viewer"
             }
         });
     } catch (error) {

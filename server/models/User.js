@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema(
             select: false
         },
 
+        // Task 11: User role and permissions
+        role: {
+            type: String,
+            enum: ["admin", "staff", "viewer"],
+            default: "viewer",
+            required: true
+        },
+
         resetPasswordToken: {
             type: String,
             select: false

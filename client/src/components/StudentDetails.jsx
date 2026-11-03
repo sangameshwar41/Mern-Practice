@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { getStudentById } from "../api/studentApi";
 
@@ -21,7 +22,9 @@ function StudentDetails({ studentId }) {
             }
         }
 
-        fetchStudent();
+        if (studentId) {
+            fetchStudent();
+        }
     }, [studentId]);
 
     if (loading) {
@@ -29,7 +32,7 @@ function StudentDetails({ studentId }) {
     }
 
     if (error) {
-        return <p>{error}</p>;
+        return <p className="error-message">{error}</p>;
     }
 
     if (!student) {
@@ -40,12 +43,49 @@ function StudentDetails({ studentId }) {
         <div className="student-details">
             <h2>Student Details</h2>
 
-            <p><strong>Full Name:</strong> {student.fullName}</p>
-            <p><strong>Email:</strong> {student.email}</p>
-            <p><strong>Mobile Number:</strong> {student.mobileNumber}</p>
-            <p><strong>Gender:</strong> {student.gender}</p>
-            <p><strong>Course:</strong> {student.course}</p>
-            <p><strong>Address:</strong> {student.address}</p>
+            <p>
+                <strong>Full Name:</strong> {student.fullName}
+            </p>
+
+            <p>
+                <strong>Email:</strong> {student.email}
+            </p>
+
+            <p>
+                <strong>Mobile Number:</strong> {student.mobileNumber}
+            </p>
+
+            <p>
+                <strong>Gender:</strong> {student.gender}
+            </p>
+
+            <p>
+                <strong>Course:</strong>{" "}
+                {student.course && typeof student.course === "object"
+                    ? student.course.courseName +
+                      " (" +
+                      student.course.courseCode +
+                      ")"
+                    : "Course unavailable"}
+            </p>
+
+            <p>
+                <strong>Course Duration:</strong>{" "}
+                {student.course && typeof student.course === "object"
+                    ? student.course.duration
+                    : "N/A"}
+            </p>
+
+            <p>
+                <strong>Course Fee:</strong>{" "}
+                {student.course && typeof student.course === "object"
+                    ? student.course.fee
+                    : "N/A"}
+            </p>
+
+            <p>
+                <strong>Address:</strong> {student.address}
+            </p>
         </div>
     );
 }

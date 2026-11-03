@@ -1,13 +1,25 @@
+
 import { useEffect, useState } from "react";
 import {
     getAllStudents,
     deleteStudent
 } from "../api/studentApi";
+import { getAllCourses } from "../api/courseApi";
 
-function StudentList({ onEdit }) {
+function StudentList({ onEdit, onView }) {
     const [students, setStudents] = useState([]);
+    const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    // Get the logged-in user's role
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const role = user ? user.role : "viewer";
+
+    // Check permissions
+    const canEdit = role === "admin" || role === "staff";
+    const canDelete = role === "admin";
 
     // Search and filters
     const [search, setSearch] = useState("");
@@ -21,12 +33,27 @@ function StudentList({ onEdit }) {
     // Pagination
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
+
     const [pagination, setPagination] = useState({
         totalStudents: 0,
         currentPage: 1,
         pageSize: 10,
         totalPages: 0
     });
+
+    // Fetch courses for the filter dropdown
+    useEffect(function () {
+        async function fetchCourses() {
+            try {
+                const result = await getAllCourses();
+                setCourses(result.courses || []);
+            } catch (error) {
+                setError(error.message);
+            }
+        }
+
+        fetchCourses();
+    }, []);
 
     // Fetch students from the backend
     async function fetchStudents() {
@@ -44,8 +71,13 @@ function StudentList({ onEdit }) {
                 limit: limit
             });
 
-            setStudents(result.data);
-            setPagination(result.pagination);
+            setStudents(result.data || []);
+            setPagination(result.pagination || {
+                totalStudents: 0,
+                currentPage: 1,
+                pageSize: limit,
+                totalPages: 0
+            });
         } catch (error) {
             setError(error.message);
             setStudents([]);
@@ -54,12 +86,12 @@ function StudentList({ onEdit }) {
         }
     }
 
-    // Fetch students when options change
+    // Fetch again when search or display options change
     useEffect(function () {
         fetchStudents();
     }, [search, course, gender, sortBy, order, page, limit]);
 
-    // Reset to page 1 when options change
+    // Reset pagination when search/filter/sort options change
     function handleSearchChange(value) {
         setSearch(value);
         setPage(1);
@@ -90,8 +122,20 @@ function StudentList({ onEdit }) {
         setPage(1);
     }
 
-    // Delete a student
+    // View the selected student's details
+    function handleView(student) {
+        if (typeof onView === "function") {
+            onView(student._id);
+        }
+    }
+
+    // Delete a student - Admin only
     async function handleDelete(studentId) {
+        if (!canDelete) {
+            setError("You do not have permission to delete students.");
+            return;
+        }
+
         const confirmed = window.confirm(
             "Are you sure you want to delete this student?"
         );
@@ -114,7 +158,6 @@ function StudentList({ onEdit }) {
         <div className="student-list">
             <h2>Student List</h2>
 
-            {/* Search and filters */}
             <div className="student-list-filters">
                 <label>
                     Search by name or email
@@ -137,12 +180,14 @@ function StudentList({ onEdit }) {
                         }}
                     >
                         <option value="">All Courses</option>
-                        <option value="CSE">CSE</option>
-                        <option value="ECE">ECE</option>
-                        <option value="EEE">EEE</option>
-                        <option value="MERN Stack Development">
-                            MERN Stack Development
-                        </option>
+
+                        {courses.map(function (item) {
+                            return (
+                                <option key={item._id} value={item._id}>
+                                    {item.courseName} ({item.courseCode})
+                                </option>
+                            );
+                        })}
                     </select>
                 </label>
 
@@ -240,28 +285,49 @@ function StudentList({ onEdit }) {
                                     <td>{student.email}</td>
                                     <td>{student.mobileNumber}</td>
                                     <td>{student.gender}</td>
-                                    <td>{student.course}</td>
+                                    <td>
+                                        {student.course &&
+                                        typeof student.course === "object"
+                                            ? student.course.courseName +
+                                              " (" +
+                                              student.course.courseCode +
+                                              ")"
+                                            : "Course unavailable"}
+                                    </td>
                                     <td>{student.address}</td>
+
                                     <td>
                                         <button
                                             type="button"
                                             onClick={function () {
-                                                onEdit(student._id);
+                                                handleView(student);
                                             }}
                                         >
-                                            Edit
+                                            View
                                         </button>
 
-                                        {" "}
+                                        {canEdit &&
+                                            typeof onEdit === "function" && (
+                                                <button
+                                                    type="button"
+                                                    onClick={function () {
+                                                        onEdit(student._id);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
 
-                                        <button
-                                            type="button"
-                                            onClick={function () {
-                                                handleDelete(student._id);
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
+                                        {canDelete && (
+                                            <button
+                                                type="button"
+                                                onClick={function () {
+                                                    handleDelete(student._id);
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             );
@@ -270,7 +336,6 @@ function StudentList({ onEdit }) {
                 </table>
             )}
 
-            {/* Pagination controls */}
             {!loading && !error && (
                 <div className="pagination-controls">
                     <button

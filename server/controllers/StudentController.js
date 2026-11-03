@@ -1,4 +1,6 @@
+
 const Student = require("../models/Student");
+const Course = require("../models/Course");
 const mongoose = require("mongoose");
 
 // Get all students with search, filtering, sorting, and pagination
@@ -88,22 +90,21 @@ async function getAllStudents(req, res, next) {
             }
         }
 
-        // Filter by course
-        if (course !== undefined) {
-            const allowedCourses = [
-                "CSE",
-                "ECE",
-                "EEE",
-                "MERN Stack Development"
-            ];
-
-            if (
-                typeof course !== "string" ||
-                !allowedCourses.includes(course)
-            ) {
+        // Filter by Course document ID
+        if (course !== undefined && course !== "") {
+            if (!mongoose.isObjectIdOrHexString(course)) {
                 return res.status(400).json({
                     success: false,
-                    message: "Invalid course value"
+                    message: "Invalid course ID"
+                });
+            }
+
+            const existingCourse = await Course.findById(course);
+
+            if (!existingCourse) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Course not found"
                 });
             }
 
@@ -111,13 +112,10 @@ async function getAllStudents(req, res, next) {
         }
 
         // Filter by gender
-        if (gender !== undefined) {
+        if (gender !== undefined && gender !== "") {
             const allowedGenders = ["Male", "Female", "Other"];
 
-            if (
-                typeof gender !== "string" ||
-                !allowedGenders.includes(gender)
-            ) {
+            if (!allowedGenders.includes(gender)) {
                 return res.status(400).json({
                     success: false,
                     message: "Invalid gender value"
@@ -127,15 +125,16 @@ async function getAllStudents(req, res, next) {
             filter.gender = gender;
         }
 
-        // Calculate records to skip
+        // Calculate how many records to skip
         const skip = (pageNumber - 1) * pageSize;
 
         // Prepare sorting
         const sort = {};
         sort[sortBy] = order === "asc" ? 1 : -1;
 
-        // Get students for the requested page
+        // Get students and their course details
         const students = await Student.find(filter)
+            .populate("course", "courseName courseCode duration fee status")
             .sort(sort)
             .skip(skip)
             .limit(pageSize);
@@ -144,8 +143,7 @@ async function getAllStudents(req, res, next) {
         const totalStudents = await Student.countDocuments(filter);
         const totalPages = Math.ceil(totalStudents / pageSize);
 
-        // Send response
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: students,
             pagination: {
@@ -160,17 +158,20 @@ async function getAllStudents(req, res, next) {
     }
 }
 
-// Get a student by ID
+// Get one student by ID
 async function getStudentById(req, res, next) {
     try {
-        if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+        const { id } = req.params;
+
+        if (!mongoose.isObjectIdOrHexString(id)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid student ID"
             });
         }
 
-        const student = await Student.findById(req.params.id);
+        const student = await Student.findById(id)
+            .populate("course", "courseName courseCode duration fee status");
 
         if (!student) {
             return res.status(404).json({
@@ -179,7 +180,7 @@ async function getStudentById(req, res, next) {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: student
         });
@@ -214,6 +215,32 @@ async function createStudent(req, res, next) {
             });
         }
 
+        // Validate the Course document ID
+        if (!mongoose.isObjectIdOrHexString(course)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid course ID"
+            });
+        }
+
+        // Make sure the selected Course exists
+        const existingCourse = await Course.findById(course);
+
+        if (!existingCourse) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+
+        // Only active courses can receive new students
+        if (existingCourse.status !== "active") {
+            return res.status(400).json({
+                success: false,
+                message: "Students can only enroll in active courses"
+            });
+        }
+
         const student = await Student.create({
             fullName,
             email,
@@ -223,9 +250,12 @@ async function createStudent(req, res, next) {
             address
         });
 
-        res.status(201).json({
+        const populatedStudent = await Student.findById(student._id)
+            .populate("course", "courseName courseCode duration fee status");
+
+        return res.status(201).json({
             success: true,
-            data: student
+            data: populatedStudent
         });
     } catch (error) {
         next(error);
@@ -235,21 +265,73 @@ async function createStudent(req, res, next) {
 // Update selected student fields
 async function updateStudent(req, res, next) {
     try {
-        if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+        const { id } = req.params;
+
+        if (!mongoose.isObjectIdOrHexString(id)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid student ID"
             });
         }
 
+        const allowedFields = [
+            "fullName",
+            "email",
+            "mobileNumber",
+            "gender",
+            "course",
+            "address"
+        ];
+
+        const updates = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid fields provided for update"
+            });
+        }
+
+        // Validate the new Course reference if supplied
+        if (updates.course !== undefined) {
+            if (!mongoose.isObjectIdOrHexString(updates.course)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid course ID"
+                });
+            }
+
+            const existingCourse = await Course.findById(updates.course);
+
+            if (!existingCourse) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Course not found"
+                });
+            }
+
+            if (existingCourse.status !== "active") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Students can only be assigned to active courses"
+                });
+            }
+        }
+
         const student = await Student.findByIdAndUpdate(
-            req.params.id,
-            req.body,
+            id,
+            updates,
             {
                 new: true,
                 runValidators: true
             }
-        );
+        ).populate("course", "courseName courseCode duration fee status");
 
         if (!student) {
             return res.status(404).json({
@@ -258,7 +340,7 @@ async function updateStudent(req, res, next) {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: student
         });
@@ -270,16 +352,16 @@ async function updateStudent(req, res, next) {
 // Delete a student
 async function deleteStudent(req, res, next) {
     try {
-        if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+        const { id } = req.params;
+
+        if (!mongoose.isObjectIdOrHexString(id)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid student ID"
             });
         }
 
-        const student = await Student.findByIdAndDelete(
-            req.params.id
-        );
+        const student = await Student.findByIdAndDelete(id);
 
         if (!student) {
             return res.status(404).json({
@@ -288,7 +370,7 @@ async function deleteStudent(req, res, next) {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Student deleted successfully"
         });
@@ -297,7 +379,7 @@ async function deleteStudent(req, res, next) {
     }
 }
 
-// Export all controller functions
+// Export controller functions
 module.exports = {
     getAllStudents,
     getStudentById,

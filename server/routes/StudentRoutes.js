@@ -1,8 +1,9 @@
 const express = require("express");
 
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware");
 
+const authMiddleware = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 const {
     getAllStudents,
@@ -12,22 +13,22 @@ const {
     deleteStudent
 } = require("../controllers/StudentController");
 
-// Activate authentication for all student routes
+// Require a valid login token for all student routes
 router.use(authMiddleware);
 
-// Get all students
-router.get("/", getAllStudents);
+// Admin, Staff, and Viewer can view all students
+router.get("/",authorizeRoles("admin", "staff", "viewer"),getAllStudents);
 
-// Get one student by ID
-router.get("/:id", getStudentById);
+// Admin, Staff, and Viewer can view one student
+router.get("/:id",authorizeRoles("admin", "staff", "viewer"),getStudentById);
 
-// Create a student
-router.post("/", createStudent);
+// Only Admin and Staff can create students
+router.post("/",authorizeRoles("admin", "staff"), createStudent);
 
-// Update selected student fields
-router.patch("/:id", updateStudent);
+// Only Admin and Staff can edit students
+router.patch("/:id",authorizeRoles("admin", "staff"),updateStudent);
 
-// Delete a student
-router.delete("/:id", deleteStudent);
+// Only Admin can delete students
+router.delete("/:id",authorizeRoles("admin"),deleteStudent);
 
 module.exports = router;

@@ -32,7 +32,16 @@ function Login() {
             }
 
             localStorage.setItem("token", result.token);
-            localStorage.setItem("user", JSON.stringify(result.user));
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify({
+                    id: result.user.id,
+                    username: result.user.username,
+                    email: result.user.email,
+                    role: result.user.role || "viewer"
+                })
+            );
 
             setEmail("");
             setPassword("");
