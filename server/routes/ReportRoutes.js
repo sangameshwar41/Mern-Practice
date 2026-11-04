@@ -10,8 +10,7 @@ const Course = require("../models/Course");
 const Instructor = require("../models/Instructor");
 const User = require("../models/User");
 
-router.get(
-    "/",
+router.get("/",
     authMiddleware,
     authorizeRoles("admin"),
     async function (req, res) {

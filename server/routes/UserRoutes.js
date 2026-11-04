@@ -7,8 +7,7 @@ const authorizeRoles = require("../middleware/roleMiddleware");
 const User = require("../models/User");
 
 // Get all users - Admin only
-router.get(
-    "/",
+router.get("/",
     authMiddleware,
     authorizeRoles("admin"),
     async function (req, res) {

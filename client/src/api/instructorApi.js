@@ -36,6 +36,7 @@ export async function getInstructorById(id) {
 export async function createInstructor(instructorData) {
     return request("/instructors", {
         method: "POST",
+        
         body: JSON.stringify(instructorData)
     });
 }

@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# Ignore uploaded student photos and documents
+uploads/students/photos/*
+uploads/students/documents/*

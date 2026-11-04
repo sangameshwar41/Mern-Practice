@@ -78,3 +78,99 @@ export function deleteStudent(id) {
         method: "DELETE"
     });
 }
+
+ // Upload a student photo
+export function uploadStudentPhoto(id, photoFile) {
+    const formData = new FormData();
+
+    formData.append("photo", photoFile);
+
+    return request(`/students/${id}`, {
+        method: "PATCH",
+        body: formData
+    });
+}
+
+// Upload a student PDF document
+export function uploadStudentDocument(id, documentFile) {
+    const formData = new FormData();
+
+    formData.append("document", documentFile);
+
+    return request(`/students/${id}/document`, {
+        method: "POST",
+        body: formData
+    });
+}
+
+// Download a student PDF document
+export async function downloadStudentDocument(id) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+        `${API_BASE_URL}/students/${id}/document`,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        let message = "Unable to download document";
+
+        try {
+            const result = await response.json();
+            message = result.message || message;
+        } catch (error) {
+            // Keep the default error message if the response isn't JSON.
+        }
+
+        throw new Error(message);
+    }
+
+    return response.blob();
+}
+// Remove a student's photo
+export function removeStudentPhoto(id) {
+    return request(`/students/${id}/photo`, {
+        method: "DELETE"
+    });
+}
+
+// Remove a student's PDF document
+export function removeStudentDocument(id) {
+    return request(`/students/${id}/document`, {
+        method: "DELETE"
+    });
+}
+// Get a student's photo
+export async function getStudentPhoto(id) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+        `${API_BASE_URL}/students/${id}/photo`,
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        let message = "Unable to load student photo";
+
+        try {
+            const result = await response.json();
+            message = result.message || message;
+        } catch (error) {
+            // Keep the default error message.
+        }
+
+        throw new Error(message);
+    }
+
+    return response.blob();
+}

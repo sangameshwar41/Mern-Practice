@@ -1,12 +1,17 @@
 
 import { useEffect, useState } from "react";
+
 import FormInput from "./FormInput";
+
 import {
     createStudent,
     getStudentById,
-    updateStudent
+    updateStudent,
+    uploadStudentPhoto
 } from "../api/studentApi";
+
 import { getAllCourses } from "../api/courseApi";
+
 import "./StudentForm.css";
 
 function StudentForm({
@@ -22,12 +27,16 @@ function StudentForm({
     const [courses, setCourses] = useState([]);
     const [address, setAddress] = useState("");
 
+    // Store the selected photo file
+    const [photoFile, setPhotoFile] = useState(null);
+
     const [errors, setErrors] = useState({});
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
     const [coursesLoading, setCoursesLoading] = useState(true);
     const [apiError, setApiError] = useState("");
 
+    // Fetch active courses
     useEffect(function () {
         async function fetchCourses() {
             try {
@@ -53,6 +62,7 @@ function StudentForm({
         fetchCourses();
     }, []);
 
+    // Fetch student details when editing
     useEffect(function () {
         async function fetchStudent() {
             if (!studentId) {
@@ -72,8 +82,7 @@ function StudentForm({
                 setMobile(student.mobileNumber || "");
                 setGender(student.gender || "");
 
-                // The backend populates course as an object.
-                // Use its ID as the selected dropdown value.
+                // Use the course ID for the dropdown
                 setCourse(
                     student.course && student.course._id
                         ? student.course._id
@@ -96,30 +105,51 @@ function StudentForm({
 
         const newErrors = {};
 
+        // Validate name
         if (name.trim() === "") {
             newErrors.name = "Name is required";
         }
 
+        // Validate email
         if (email.trim() === "") {
             newErrors.email = "Email is required";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             newErrors.email = "Enter a valid email address";
         }
 
+        // Validate mobile number
         if (!/^[0-9]{10}$/.test(mobile)) {
             newErrors.mobile = "Enter a valid 10-digit mobile number";
         }
 
+        // Validate gender
         if (gender === "") {
             newErrors.gender = "Please select gender";
         }
 
+        // Validate course
         if (course === "") {
             newErrors.course = "Please select a course";
         }
 
+        // Validate address
         if (address.trim() === "") {
             newErrors.address = "Address is required";
+        }
+
+        // Validate the selected photo
+        if (photoFile) {
+            const allowedTypes = [
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            ];
+
+            if (!allowedTypes.includes(photoFile.type)) {
+                newErrors.photo = "Select a JPG, PNG or WebP image";
+            } else if (photoFile.size > 2 * 1024 * 1024) {
+                newErrors.photo = "Photo size must not exceed 2 MB";
+            }
         }
 
         setErrors(newErrors);
@@ -142,22 +172,27 @@ function StudentForm({
                 address: address.trim()
             };
 
+            let savedStudentId = studentId;
+
             if (studentId) {
+                // Update the existing student's text details
                 await updateStudent(studentId, studentData);
-
-                setSuccess("Student updated successfully!");
-
-                if (onUpdateSuccess) {
-                    onUpdateSuccess();
-                }
             } else {
-                await createStudent(studentData);
+                // Create the student first
+                const result = await createStudent(studentData);
 
+                savedStudentId = result.data._id;
+            }
+
+            // Upload the selected photo after the student is saved
+            if (photoFile) {
+                await uploadStudentPhoto(savedStudentId, photoFile);
+            }
+
+            if (studentId) {
+                setSuccess("Student updated successfully!");
+            } else {
                 setSuccess("Student registered successfully!");
-
-                if (onCreateSuccess) {
-                    onCreateSuccess();
-                }
 
                 setName("");
                 setEmail("");
@@ -166,6 +201,19 @@ function StudentForm({
                 setCourse("");
                 setAddress("");
                 setErrors({});
+            }
+
+            setPhotoFile(null);
+
+            // Clear the file input
+            event.target.reset();
+
+            if (studentId && onUpdateSuccess) {
+                onUpdateSuccess();
+            }
+
+            if (!studentId && onCreateSuccess) {
+                onCreateSuccess();
             }
         } catch (error) {
             setApiError(error.message);
@@ -222,6 +270,7 @@ function StudentForm({
 
                     <div className="form-group">
                         <label htmlFor="gender">Gender</label>
+
                         <select
                             id="gender"
                             value={gender}
@@ -237,12 +286,15 @@ function StudentForm({
                         </select>
 
                         {errors.gender && (
-                            <p className="error-message">{errors.gender}</p>
+                            <p className="error-message">
+                                {errors.gender}
+                            </p>
                         )}
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="course">Course</label>
+
                         <select
                             id="course"
                             value={course}
@@ -250,7 +302,9 @@ function StudentForm({
                                 setCourse(event.target.value);
                             }}
                             className={errors.course ? "input-error" : ""}
-                            disabled={coursesLoading || courses.length === 0}
+                            disabled={
+                                coursesLoading || courses.length === 0
+                            }
                         >
                             <option value="">
                                 {coursesLoading
@@ -262,7 +316,10 @@ function StudentForm({
 
                             {courses.map(function (item) {
                                 return (
-                                    <option key={item._id} value={item._id}>
+                                    <option
+                                        key={item._id}
+                                        value={item._id}
+                                    >
                                         {item.courseName} ({item.courseCode})
                                     </option>
                                 );
@@ -270,12 +327,15 @@ function StudentForm({
                         </select>
 
                         {errors.course && (
-                            <p className="error-message">{errors.course}</p>
+                            <p className="error-message">
+                                {errors.course}
+                            </p>
                         )}
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="address">Address</label>
+
                         <textarea
                             id="address"
                             value={address}
@@ -287,14 +347,61 @@ function StudentForm({
                         />
 
                         {errors.address && (
-                            <p className="error-message">{errors.address}</p>
+                            <p className="error-message">
+                                {errors.address}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Student photo upload */}
+                    <div className="form-group">
+                        <label htmlFor="photo">Student Photo</label>
+
+                        <input
+                            id="photo"
+                            name="photo"
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                            onChange={function (event) {
+                                const selectedFile = event.target.files[0] || null;
+
+                                setPhotoFile(selectedFile);
+
+                                setErrors(function (previousErrors) {
+                                    return {
+                                        ...previousErrors,
+                                        photo: ""
+                                    };
+                                });
+                            }}
+                        />
+
+                        <p>
+                            Accepted formats: JPG, PNG and WebP.
+                            Maximum size: 2 MB.
+                        </p>
+
+                        {photoFile && (
+                            <p>
+                                Selected file: {photoFile.name}
+                            </p>
+                        )}
+
+                        {errors.photo && (
+                            <p className="error-message">
+                                {errors.photo}
+                            </p>
                         )}
                     </div>
 
                     <button
                         type="submit"
                         className="register-button"
-                        disabled={loading || coursesLoading || courses.length === 0}
+                        disabled={
+                            loading ||
+                            coursesLoading ||
+                            courses.length === 0
+                        }
                     >
                         {loading
                             ? (studentId ? "Updating..." : "Registering...")

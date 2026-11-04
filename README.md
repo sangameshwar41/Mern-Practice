@@ -76,3 +76,35 @@ The Student model includes full name, email, mobile number, gender, course, and 
 
 - `POST /students` — creates a student record.
 - `GET /students` — retrieves student records.
+
+### File Upload and Storage
+
+This application supports uploading student photos and PDF documents.
+
+#### Student Photos
+
+- Allowed formats: JPG, JPEG, PNG, and WebP.
+- Maximum file size: 2 MB.
+- Storage location: `server/uploads/students/photos/`.
+- Uploaded photos use randomly generated filenames to avoid filename conflicts.
+
+#### Student Documents
+
+- Allowed format: PDF only.
+- Maximum file size: 5 MB.
+- Storage location: `server/uploads/students/documents/`.
+- PDF documents can be uploaded, downloaded, and removed by authorized users.
+
+#### Security and Validation
+
+- The backend validates file extensions and MIME types.
+- File size limits are enforced by the upload middleware.
+- Authentication and role-based authorization protect upload, removal, and document download operations.
+- The backend checks whether files exist before serving them.
+- Uploaded files are stored locally during development. For production deployment, use persistent storage or an object storage service.
+
+#### Storage Configuration
+
+The upload folders are created automatically by the backend when the upload middleware is initialized. Ensure that the application has permission to write to these folders.
+
+**Note:** Local uploaded files are not stored in MongoDB. MongoDB stores the file references associated with each student.

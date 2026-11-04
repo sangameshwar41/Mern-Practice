@@ -4,6 +4,7 @@ const User = require("../models/User");
 // Verify the user's JWT token and get their role
 async function authMiddleware(req, res, next) {
     try {
+         console.log("Auth middleware reached:", req.method, req.originalUrl);
         // Get the token from the request headers
         const authHeader = req.headers.authorization;
 
