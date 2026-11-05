@@ -4,6 +4,8 @@ const Course = require("../models/Course");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
+const sendEmail = require("../services/emailService");
+const enrollmentEmail = require("../templates/enrollmentEmail");
 
 const photoFolder = path.join(
     __dirname,
@@ -283,6 +285,7 @@ async function getStudentPhoto(req, res, next) {
     }
 }
 
+
 // Create a student with an optional photo
 async function createStudent(req, res, next) {
     try {
@@ -336,11 +339,11 @@ async function createStudent(req, res, next) {
 
             return res.status(400).json({
                 success: false,
-                message:
-                    "Students can only enroll in active courses"
+                message: "Students can only enroll in active courses"
             });
         }
 
+        // Save the student in MongoDB
         const student = await Student.create({
             fullName,
             email,
@@ -353,21 +356,49 @@ async function createStudent(req, res, next) {
                 : null
         });
 
+        // Get the student with populated course details
         const populatedStudent = await Student.findById(student._id)
             .populate(
                 "course",
                 "courseName courseCode duration fee status"
             );
 
+        // Send enrollment confirmation email
+        try {
+            const html = enrollmentEmail(
+                populatedStudent.fullName,
+                populatedStudent.course.courseName
+            );
+
+            await sendEmail({
+                from: {
+                    name: process.env.EMAIL_FROM_NAME,
+                    address: process.env.EMAIL_FROM_ADDRESS
+                },
+                to: populatedStudent.email,
+                subject: "Student Enrollment Confirmation",
+                html: html
+            });
+
+        } catch (emailError) {
+            console.error(
+                "Enrollment email failed:",
+                emailError.message
+            );
+        }
+
+        // Return successful enrollment response
         return res.status(201).json({
             success: true,
             data: populatedStudent
         });
+
     } catch (error) {
         removeUploadedPhoto(req.file?.filename);
         next(error);
     }
 }
+
 
 // Update student details and optionally replace the photo
 async function updateStudent(req, res, next) {

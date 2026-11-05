@@ -108,3 +108,64 @@ This application supports uploading student photos and PDF documents.
 The upload folders are created automatically by the backend when the upload middleware is initialized. Ensure that the application has permission to write to these folders.
 
 **Note:** Local uploaded files are not stored in MongoDB. MongoDB stores the file references associated with each student.
+
+## Email Notifications
+
+The application sends an enrollment confirmation email to students after successful registration.
+
+### Email Configuration
+
+Nodemailer is used to send emails through Gmail SMTP.
+
+1. Open the `server` folder.
+2. Create or update the `.env` file.
+3. Add the following email configuration:
+
+```env
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_gmail_address
+EMAIL_PASS=your_gmail_app_password
+EMAIL_FROM_NAME=Student Management System
+EMAIL_FROM_ADDRESS=your_gmail_address
+```
+
+4. Replace the placeholder values with your own Gmail address and Gmail App Password.
+5. Enable 2-Step Verification on your Google Account and generate an App Password.
+6. Never share your App Password or commit the `.env` file to GitHub.
+
+### Enrollment Confirmation
+
+- An enrollment confirmation email is sent after a student is successfully saved in MongoDB.
+- The email includes the student's name and course name.
+- The sender name is Student Management System.
+- Email sending failures are logged without cancelling the successful student registration.
+
+### Email Testing
+
+The project uses Node.js built-in testing (`node:test`) for automated email tests.
+
+Navigate to the server folder:
+
+```bash
+cd server
+```
+
+Run the automated tests:
+
+```bash
+npm test
+```
+
+The tests verify:
+
+- Email template contains the student name and course name.
+- Email service handles successful email sending.
+- Email service handles email sending failures.
+
+### Email-related Files
+
+- `config/emailConfig.js` — Gmail SMTP configuration.
+- `services/emailService.js` — Reusable email service.
+- `templates/enrollmentEmail.js` — Enrollment confirmation HTML template.
+- `tests/email.test.js` — Automated email tests.
