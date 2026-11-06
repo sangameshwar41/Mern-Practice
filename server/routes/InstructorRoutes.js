@@ -4,6 +4,13 @@ const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+const validate = require("../middleware/validate");
+const validateObjectId = require("../middleware/validateObjectId");
+
+const {
+    instructorSchema,
+    instructorUpdateSchema
+} = require("../validators/instructorValidator");
 
 const {
     getAllInstructors,
@@ -13,16 +20,41 @@ const {
     deleteInstructor
 } = require("../controllers/InstructorController");
 
-// Require login for every instructor route
 router.use(authMiddleware);
 
-// Admin, Staff, and Viewer can view instructors
-router.get("/", authorizeRoles("admin", "staff", "viewer"), getAllInstructors);
-router.get("/:id", authorizeRoles("admin", "staff", "viewer"), getInstructorById);
+router.get(
+    "/",
+    authorizeRoles("admin", "staff", "viewer"),
+    getAllInstructors
+);
 
-// Only Admin can create, edit, or delete instructors
-router.post("/", authorizeRoles("admin"), createInstructor);
-router.patch("/:id", authorizeRoles("admin"), updateInstructor);
-router.delete("/:id", authorizeRoles("admin"), deleteInstructor);
+router.get(
+    "/:id",
+    authorizeRoles("admin", "staff", "viewer"),
+    validateObjectId(),
+    getInstructorById
+);
+
+router.post(
+    "/",
+    authorizeRoles("admin"),
+    validate(instructorSchema),
+    createInstructor
+);
+
+router.patch(
+    "/:id",
+    authorizeRoles("admin"),
+    validateObjectId(),
+    validate(instructorUpdateSchema),
+    updateInstructor
+);
+
+router.delete(
+    "/:id",
+    authorizeRoles("admin"),
+    validateObjectId(),
+    deleteInstructor
+);
 
 module.exports = router;

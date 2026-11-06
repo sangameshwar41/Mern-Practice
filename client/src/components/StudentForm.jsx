@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-
 import FormInput from "./FormInput";
 
 import {
@@ -27,7 +26,6 @@ function StudentForm({
     const [courses, setCourses] = useState([]);
     const [address, setAddress] = useState("");
 
-    // Store the selected photo file
     const [photoFile, setPhotoFile] = useState(null);
 
     const [errors, setErrors] = useState({});
@@ -80,9 +78,13 @@ function StudentForm({
                 setName(student.fullName || "");
                 setEmail(student.email || "");
                 setMobile(student.mobileNumber || "");
-                setGender(student.gender || "");
 
-                // Use the course ID for the dropdown
+                setGender(
+                    student.gender
+                        ? student.gender.toLowerCase()
+                        : ""
+                );
+
                 setCourse(
                     student.course && student.course._id
                         ? student.course._id
@@ -100,44 +102,56 @@ function StudentForm({
         fetchStudent();
     }, [studentId]);
 
+    // Validate form and submit
     async function handleSubmit(event) {
         event.preventDefault();
 
         const newErrors = {};
 
         // Validate name
-        if (name.trim() === "") {
-            newErrors.name = "Name is required";
+        if (name.trim().length < 2) {
+            newErrors.name =
+                "Name must contain at least 2 characters";
+        } else if (name.trim().length > 50) {
+            newErrors.name =
+                "Name cannot exceed 50 characters";
         }
 
         // Validate email
         if (email.trim() === "") {
             newErrors.email = "Email is required";
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        } else if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+        ) {
             newErrors.email = "Enter a valid email address";
         }
 
         // Validate mobile number
         if (!/^[0-9]{10}$/.test(mobile)) {
-            newErrors.mobile = "Enter a valid 10-digit mobile number";
+            newErrors.mobile =
+                "Enter a valid 10-digit mobile number";
         }
 
         // Validate gender
-        if (gender === "") {
-            newErrors.gender = "Please select gender";
+        if (!["male", "female", "other"].includes(gender)) {
+            newErrors.gender = "Please select a valid gender";
         }
 
         // Validate course
-        if (course === "") {
+        if (course.trim() === "") {
             newErrors.course = "Please select a course";
         }
 
         // Validate address
-        if (address.trim() === "") {
-            newErrors.address = "Address is required";
+        if (address.trim().length < 5) {
+            newErrors.address =
+                "Address must contain at least 5 characters";
+        } else if (address.trim().length > 200) {
+            newErrors.address =
+                "Address cannot exceed 200 characters";
         }
 
-        // Validate the selected photo
+        // Validate selected photo
         if (photoFile) {
             const allowedTypes = [
                 "image/jpeg",
@@ -146,9 +160,11 @@ function StudentForm({
             ];
 
             if (!allowedTypes.includes(photoFile.type)) {
-                newErrors.photo = "Select a JPG, PNG or WebP image";
+                newErrors.photo =
+                    "Select a JPG, PNG or WebP image";
             } else if (photoFile.size > 2 * 1024 * 1024) {
-                newErrors.photo = "Photo size must not exceed 2 MB";
+                newErrors.photo =
+                    "Photo size must not exceed 2 MB";
             }
         }
 
@@ -156,6 +172,7 @@ function StudentForm({
         setApiError("");
         setSuccess("");
 
+        // Stop submission if validation errors exist
         if (Object.keys(newErrors).length > 0) {
             return;
         }
@@ -165,7 +182,7 @@ function StudentForm({
         try {
             const studentData = {
                 fullName: name.trim(),
-                email: email.trim(),
+                email: email.trim().toLowerCase(),
                 mobileNumber: mobile,
                 gender: gender,
                 course: course,
@@ -175,16 +192,16 @@ function StudentForm({
             let savedStudentId = studentId;
 
             if (studentId) {
-                // Update the existing student's text details
+                // Update existing student
                 await updateStudent(studentId, studentData);
             } else {
-                // Create the student first
+                // Create new student
                 const result = await createStudent(studentData);
 
                 savedStudentId = result.data._id;
             }
 
-            // Upload the selected photo after the student is saved
+            // Upload photo after saving student
             if (photoFile) {
                 await uploadStudentPhoto(savedStudentId, photoFile);
             }
@@ -205,7 +222,7 @@ function StudentForm({
 
             setPhotoFile(null);
 
-            // Clear the file input
+            // Clear file input
             event.target.reset();
 
             if (studentId && onUpdateSuccess) {
@@ -225,6 +242,7 @@ function StudentForm({
     return (
         <div className="student-form-container">
             <div className="student-form-card">
+
                 <h2>
                     {studentId
                         ? "Edit Student"
@@ -232,6 +250,7 @@ function StudentForm({
                 </h2>
 
                 <form onSubmit={handleSubmit} noValidate>
+
                     <FormInput
                         label="Full Name"
                         name="name"
@@ -277,12 +296,14 @@ function StudentForm({
                             onChange={function (event) {
                                 setGender(event.target.value);
                             }}
-                            className={errors.gender ? "input-error" : ""}
+                            className={
+                                errors.gender ? "input-error" : ""
+                            }
                         >
                             <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
                         </select>
 
                         {errors.gender && (
@@ -301,7 +322,9 @@ function StudentForm({
                             onChange={function (event) {
                                 setCourse(event.target.value);
                             }}
-                            className={errors.course ? "input-error" : ""}
+                            className={
+                                errors.course ? "input-error" : ""
+                            }
                             disabled={
                                 coursesLoading || courses.length === 0
                             }
@@ -342,7 +365,9 @@ function StudentForm({
                             onChange={function (event) {
                                 setAddress(event.target.value);
                             }}
-                            className={errors.address ? "input-error" : ""}
+                            className={
+                                errors.address ? "input-error" : ""
+                            }
                             placeholder="Enter your address"
                         />
 
@@ -363,7 +388,8 @@ function StudentForm({
                             type="file"
                             accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                             onChange={function (event) {
-                                const selectedFile = event.target.files[0] || null;
+                                const selectedFile =
+                                    event.target.files[0] || null;
 
                                 setPhotoFile(selectedFile);
 
@@ -407,6 +433,7 @@ function StudentForm({
                             ? (studentId ? "Updating..." : "Registering...")
                             : (studentId ? "Update Student" : "Register")}
                     </button>
+
                 </form>
 
                 {apiError && (
@@ -416,6 +443,7 @@ function StudentForm({
                 {success && (
                     <p className="success-message">{success}</p>
                 )}
+
             </div>
         </div>
     );

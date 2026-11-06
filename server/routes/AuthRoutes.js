@@ -10,25 +10,59 @@ const {
 } = require("../controllers/AuthController");
 
 const authMiddleware = require("../middleware/authMiddleware");
+const validate = require("../middleware/validate");
+
+const {
+    registerSchema,
+    loginSchema,
+    changePasswordSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema
+} = require("../validators/authValidator");
 
 const router = express.Router();
 
-// Register a new user
-router.post("/register", registerUser);
+// Register
+router.post(
+    "/register",
+    validate(registerSchema),
+    registerUser
+);
 
-// Login an existing user
-router.post("/login", loginUser);
+// Login
+router.post(
+    "/login",
+    validate(loginSchema),
+    loginUser
+);
 
-// Get the logged-in user's profile
-router.get("/profile", authMiddleware, getUserProfile);
+// Get profile
+router.get(
+    "/profile",
+    authMiddleware,
+    getUserProfile
+);
 
-// Change password (protected route)
-router.patch("/change-password", authMiddleware, changePassword);
+// Change password
+router.patch(
+    "/change-password",
+    authMiddleware,
+    validate(changePasswordSchema),
+    changePassword
+);
 
-// Request password reset
-router.post("/forgot-password", forgotPassword);
+// Forgot password
+router.post(
+    "/forgot-password",
+    validate(forgotPasswordSchema),
+    forgotPassword
+);
 
-// Reset password using the reset token
-router.post("/reset-password", resetPassword);
+// Reset password
+router.post(
+    "/reset-password",
+    validate(resetPasswordSchema),
+    resetPassword
+);
 
 module.exports = router;
