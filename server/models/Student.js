@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
@@ -29,10 +30,17 @@ const studentSchema = new mongoose.Schema(
             required: true
         },
 
+        enrollmentStatus: {
+            type: String,
+            enum: ["enrolled", "completed", "cancelled"],
+            default: "enrolled"
+        },
+
         address: {
             type: String,
             required: true
         },
+
         photo: {
             type: String,
             default: null
@@ -53,6 +61,7 @@ studentSchema.index({ fullName: 1 });
 studentSchema.index({ course: 1 });
 studentSchema.index({ gender: 1 });
 studentSchema.index({ createdAt: -1 });
+studentSchema.index({ enrollmentStatus: 1 });
 
 // Create the Student model
 const Student = mongoose.model("Student", studentSchema);

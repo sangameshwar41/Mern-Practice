@@ -401,6 +401,8 @@ async function createStudent(req, res, next) {
 
 
 // Update student details and optionally replace the photo
+
+// Update student details and optionally replace the photo
 async function updateStudent(req, res, next) {
     try {
         const { id } = req.params;
@@ -420,7 +422,8 @@ async function updateStudent(req, res, next) {
             "mobileNumber",
             "gender",
             "course",
-            "address"
+            "address",
+            "enrollmentStatus"
         ];
 
         const updates = {};
@@ -519,6 +522,7 @@ async function updateStudent(req, res, next) {
         next(error);
     }
 }
+
 
 // Upload or replace a student's PDF document
 async function uploadStudentDocument(req, res, next) {
