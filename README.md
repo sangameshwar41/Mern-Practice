@@ -169,3 +169,73 @@ The tests verify:
 - `services/emailService.js` — Reusable email service.
 - `templates/enrollmentEmail.js` — Enrollment confirmation HTML template.
 - `tests/email.test.js` — Automated email tests.
+
+## Automated Testing
+
+The project includes automated tests for frontend components, forms, backend API routes, and email notifications.
+
+### Testing Tools
+
+**Frontend:**
+
+- Vitest
+- React Testing Library
+- Jest DOM
+- User Event
+- jsdom
+
+**Backend:**
+
+- Node.js built-in test runner (`node:test`)
+- Node.js built-in assertions (`node:assert`)
+- Supertest for API testing
+
+### Running Frontend Tests
+
+Navigate to the client folder:
+
+```bash
+cd client
+npm test
+```
+
+### Running Backend Tests
+
+Navigate to the server folder:
+
+```bash
+cd server
+npm test
+```
+
+### Current Test Coverage
+
+**Frontend tests:**
+
+- Button component rendering and interaction.
+- Form input rendering and validation.
+- Student form creation and validation.
+- Duplicate email handling.
+- Course loading and selection.
+- Student update and photo upload.
+- Loading and error handling.
+
+**Backend tests:**
+
+- API home route and unknown route handling.
+- Authentication checks for protected API routes.
+- Course model validation and default values.
+- Student model validation and indexes.
+- Email template content.
+- Successful and failed email sending using a fake transporter.
+- Role-based access control for admin, staff, and viewer.
+- Valid and invalid MongoDB ObjectId validation.
+
+### Latest Test Results
+
+- Frontend: 24 tests passed.
+- Backend: 29 tests passed.
+- Total: 53 tests passed.
+- Failed tests: 0.
+
+**Note:** Full database integration tests for CRUD, dashboard statistics, search, filtering, and pagination are not yet included.
