@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const router = express.Router();
@@ -10,6 +11,7 @@ const Course = require("../models/Course");
 const Instructor = require("../models/Instructor");
 const User = require("../models/User");
 
+// Get dashboard reports - Admin only
 router.get(
     "/",
     authMiddleware,
@@ -26,20 +28,26 @@ router.get(
                 courseDistribution
             ] = await Promise.all([
 
+                // Total students
                 Student.countDocuments(),
 
+                // Active courses
                 Course.countDocuments({ status: "active" }),
 
+                // Total instructors
                 Instructor.countDocuments(),
 
+                // Total users
                 User.countDocuments(),
 
+                // Five recently added students
                 Student.find()
                     .select("fullName email enrollmentStatus createdAt course")
                     .populate("course", "courseName courseCode")
                     .sort({ createdAt: -1 })
                     .limit(5),
 
+                // Student enrollment status distribution
                 Student.aggregate([
                     {
                         $group: {
@@ -58,6 +66,7 @@ router.get(
                     }
                 ]),
 
+                // Student count for each course
                 Course.aggregate([
                     {
                         $lookup: {
@@ -69,11 +78,11 @@ router.get(
                     },
                     {
                         $project: {
-                           _id: 1,
-                           courseName: 1,
-                           courseCode: 1,
-                           studentCount: { $size: "$students" }
-}
+                            _id: 1,
+                            courseName: 1,
+                            courseCode: 1,
+                            studentCount: { $size: "$students" }
+                        }
                     }
                 ])
 
@@ -94,7 +103,8 @@ router.get(
             });
 
         } catch (error) {
-            console.error("Dashboard reports error:", error);
+            // Log only the error name
+            console.error("Dashboard reports error:", error.name);
 
             return res.status(500).json({
                 message: "Unable to retrieve dashboard reports"

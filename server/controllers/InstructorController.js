@@ -49,8 +49,9 @@ async function getInstructorById(req, res, next) {
             });
         }
 
-        const courses = await Course.find({ instructor: instructor._id })
-            .select("courseName courseCode duration fee status");
+        const courses = await Course.find({
+            instructor: instructor._id
+        }).select("courseName courseCode duration fee status");
 
         return res.status(200).json({
             message: "Instructor retrieved successfully",
@@ -73,7 +74,14 @@ async function createInstructor(req, res, next) {
             experience
         } = req.body;
 
-        if (!instructorName || !email || !specialization || experience === undefined || experience === null || experience === "") {
+        if (
+            !instructorName ||
+            !email ||
+            !specialization ||
+            experience === undefined ||
+            experience === null ||
+            experience === ""
+        ) {
             return res.status(400).json({
                 message: "Instructor name, email, specialization, and experience are required"
             });
@@ -97,9 +105,12 @@ async function createInstructor(req, res, next) {
             });
         }
 
-        if (error.name === "ValidationError" || error.name === "CastError") {
+        if (
+            error.name === "ValidationError" ||
+            error.name === "CastError"
+        ) {
             return res.status(400).json({
-                message: error.message
+                message: "Invalid instructor data"
             });
         }
 
@@ -165,9 +176,12 @@ async function updateInstructor(req, res, next) {
             });
         }
 
-        if (error.name === "ValidationError" || error.name === "CastError") {
+        if (
+            error.name === "ValidationError" ||
+            error.name === "CastError"
+        ) {
             return res.status(400).json({
-                message: error.message
+                message: "Invalid instructor data"
             });
         }
 

@@ -1,3 +1,4 @@
+
 const Course = require("../models/Course");
 const Instructor = require("../models/Instructor");
 const Student = require("../models/Student");
@@ -51,8 +52,10 @@ async function getCourseById(req, res, next) {
             });
         }
 
-        const students = await Student.find({ course: course._id })
-            .select("fullName email mobileNumber gender address createdAt");
+        // Return only the student names to protect personal information
+        const students = await Student.find({
+            course: course._id
+        }).select("fullName");
 
         return res.status(200).json({
             message: "Course retrieved successfully",
@@ -67,7 +70,11 @@ async function getCourseById(req, res, next) {
 
 // Validate an instructor reference
 async function validateInstructor(instructorId) {
-    if (instructorId === null || instructorId === "") {
+    if (
+        instructorId === undefined ||
+        instructorId === null ||
+        instructorId === ""
+    ) {
         return null;
     }
 
@@ -143,9 +150,12 @@ async function createCourse(req, res, next) {
             });
         }
 
-        if (error.name === "ValidationError" || error.name === "CastError") {
+        if (
+            error.name === "ValidationError" ||
+            error.name === "CastError"
+        ) {
             return res.status(400).json({
-                message: error.message
+                message: "Invalid course data"
             });
         }
 
@@ -226,9 +236,12 @@ async function updateCourse(req, res, next) {
             });
         }
 
-        if (error.name === "ValidationError" || error.name === "CastError") {
+        if (
+            error.name === "ValidationError" ||
+            error.name === "CastError"
+        ) {
             return res.status(400).json({
-                message: error.message
+                message: "Invalid course data"
             });
         }
 

@@ -2,9 +2,17 @@
 const Joi = require("joi");
 
 const studentSchema = Joi.object({
-    fullName: Joi.string().trim().min(2).max(50).required(),
+    fullName: Joi.string()
+        .trim()
+        .min(2)
+        .max(50)
+        .required(),
 
-    email: Joi.string().trim().email().lowercase().required(),
+    email: Joi.string()
+        .trim()
+        .email()
+        .lowercase()
+        .required(),
 
     mobileNumber: Joi.string()
         .pattern(/^[0-9]{10}$/)
@@ -19,11 +27,16 @@ const studentSchema = Joi.object({
         .length(24)
         .required(),
 
-    address: Joi.string().trim().min(5).max(200).required(),
+    address: Joi.string()
+        .trim()
+        .min(5)
+        .max(200)
+        .required(),
 
     enrollmentStatus: Joi.string()
         .valid("enrolled", "completed", "cancelled")
-});
+})
+    .unknown(false);
 
 const studentUpdateSchema = studentSchema
     .fork(
@@ -40,7 +53,8 @@ const studentUpdateSchema = studentSchema
             return field.optional();
         }
     )
-    .min(1);
+    .min(1)
+    .unknown(false);
 
 module.exports = {
     studentSchema,

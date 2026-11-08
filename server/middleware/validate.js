@@ -1,9 +1,11 @@
 
 function validate(schema) {
     return function (req, res, next) {
+
         const { error, value } = schema.validate(req.body, {
             abortEarly: false,
-            stripUnknown: false
+            stripUnknown: false,
+            convert: true
         });
 
         if (error) {
@@ -18,6 +20,7 @@ function validate(schema) {
         }
 
         req.body = value;
+
         next();
     };
 }

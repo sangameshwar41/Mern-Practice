@@ -33,7 +33,10 @@ function removeUploadedPhoto(filename) {
             fs.unlinkSync(filePath);
         }
     } catch (error) {
-        console.error("Failed to remove uploaded photo:", error);
+        console.error(
+            "Failed to remove uploaded photo:",
+            error.name
+        );
     }
 }
 
@@ -53,7 +56,10 @@ function removeUploadedDocument(filename) {
             fs.unlinkSync(filePath);
         }
     } catch (error) {
-        console.error("Failed to remove uploaded document:", error);
+        console.error(
+            "Failed to remove uploaded document:",
+            error.name
+        );
     }
 }
 
@@ -285,7 +291,6 @@ async function getStudentPhoto(req, res, next) {
     }
 }
 
-
 // Create a student with an optional photo
 async function createStudent(req, res, next) {
     try {
@@ -379,11 +384,10 @@ async function createStudent(req, res, next) {
                 subject: "Student Enrollment Confirmation",
                 html: html
             });
-
         } catch (emailError) {
             console.error(
                 "Enrollment email failed:",
-                emailError.message
+                emailError.name
             );
         }
 
@@ -392,15 +396,11 @@ async function createStudent(req, res, next) {
             success: true,
             data: populatedStudent
         });
-
     } catch (error) {
         removeUploadedPhoto(req.file?.filename);
         next(error);
     }
 }
-
-
-// Update student details and optionally replace the photo
 
 // Update student details and optionally replace the photo
 async function updateStudent(req, res, next) {
@@ -522,7 +522,6 @@ async function updateStudent(req, res, next) {
         next(error);
     }
 }
-
 
 // Upload or replace a student's PDF document
 async function uploadStudentDocument(req, res, next) {

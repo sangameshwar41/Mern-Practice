@@ -1,12 +1,18 @@
 
 function errorHandler(err, req, res, next) {
-    console.error(err.message);
 
-    // Duplicate email error
+    // Avoid logging sensitive error details.
+    console.error("Request error:", err.name || "UnknownError");
+
+    if (res.headersSent) {
+        return next(err);
+    }
+
+    // Duplicate database record
     if (err.code === 11000) {
         return res.status(409).json({
             success: false,
-            message: "A student with this email already exists"
+            message: "A record with this information already exists"
         });
     }
 
@@ -14,27 +20,23 @@ function errorHandler(err, req, res, next) {
     if (err.name === "ValidationError") {
         return res.status(400).json({
             success: false,
-            message: err.message
+            message: "Invalid input data"
         });
     }
 
-    // File upload errors from Multer
+    // File upload errors
     if (err.name === "MulterError") {
         return res.status(400).json({
             success: false,
-            message: err.message
+            message: "File upload failed. Check the file type and size."
         });
     }
 
-    // File type validation errors from our upload middleware
-    if (err.message === "Only JPG, PNG and WebP photos are allowed.") {
-        return res.status(400).json({
-            success: false,
-            message: err.message
-        });
-    }
-
-    if (err.message === "Only PDF documents are allowed.") {
+    // Custom file type validation errors
+    if (
+        err.message === "Only JPG, PNG and WebP photos are allowed." ||
+        err.message === "Only PDF documents are allowed."
+    ) {
         return res.status(400).json({
             success: false,
             message: err.message
@@ -42,9 +44,9 @@ function errorHandler(err, req, res, next) {
     }
 
     // Unexpected server error
-    return res.status(err.statusCode || 500).json({
+    return res.status(500).json({
         success: false,
-        message: err.statusCode ? err.message : "Internal Server Error"
+        message: "Internal Server Error"
     });
 }
 

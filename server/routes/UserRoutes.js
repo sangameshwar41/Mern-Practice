@@ -1,13 +1,17 @@
+
 const express = require("express");
 
 const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
+const validateObjectId = require("../middleware/validateObjectId");
+
 const User = require("../models/User");
 
 // Get all users - Admin only
-router.get("/",
+router.get(
+    "/",
     authMiddleware,
     authorizeRoles("admin"),
     async function (req, res) {
@@ -20,7 +24,7 @@ router.get("/",
                 users: users
             });
         } catch (error) {
-            console.error("Get users error:", error);
+            console.error("Get users error:", error.name);
 
             return res.status(500).json({
                 message: "Unable to retrieve users"
@@ -34,6 +38,7 @@ router.patch(
     "/:id/role",
     authMiddleware,
     authorizeRoles("admin"),
+    validateObjectId(),
     async function (req, res) {
         try {
             const { id } = req.params;
@@ -46,16 +51,19 @@ router.patch(
                 });
             }
 
-            // Allow only the three defined roles
+            // Check that role is a valid string
             const allowedRoles = ["admin", "staff", "viewer"];
 
-            if (!allowedRoles.includes(role)) {
+            if (
+                typeof role !== "string" ||
+                !allowedRoles.includes(role)
+            ) {
                 return res.status(400).json({
                     message: "Role must be admin, staff, or viewer"
                 });
             }
 
-            // Find the user whose role will be changed
+            // Find the user
             const user = await User.findById(id);
 
             if (!user) {
@@ -64,7 +72,7 @@ router.patch(
                 });
             }
 
-            // Update and save the user's role
+            // Update the user's role
             user.role = role;
 
             await user.save();
@@ -79,13 +87,7 @@ router.patch(
                 }
             });
         } catch (error) {
-            if (error.name === "CastError") {
-                return res.status(400).json({
-                    message: "Invalid user ID"
-                });
-            }
-
-            console.error("Update user role error:", error);
+            console.error("Update user role error:", error.name);
 
             return res.status(500).json({
                 message: "Unable to update user role"

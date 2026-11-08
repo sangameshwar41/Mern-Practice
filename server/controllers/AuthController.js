@@ -1,3 +1,4 @@
+
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -14,9 +15,19 @@ async function registerUser(req, res) {
             });
         }
 
-        if (username.trim().length < 3 || username.trim().length > 30) {
+        if (
+            typeof username !== "string" ||
+            username.trim().length < 3 ||
+            username.trim().length > 30
+        ) {
             return res.status(400).json({
                 message: "Username must be between 3 and 30 characters"
+            });
+        }
+
+        if (typeof email !== "string") {
+            return res.status(400).json({
+                message: "Please enter a valid email address"
             });
         }
 
@@ -28,7 +39,10 @@ async function registerUser(req, res) {
             });
         }
 
-        if (password.length < 8) {
+        if (
+            typeof password !== "string" ||
+            password.length < 8
+        ) {
             return res.status(400).json({
                 message: "Password must be at least 8 characters long"
             });
@@ -70,7 +84,7 @@ async function registerUser(req, res) {
             });
         }
 
-        console.error("Registration error:", error);
+        console.error("Registration error:", error.name);
 
         return res.status(500).json({
             message: "Unable to register user"
@@ -83,7 +97,12 @@ async function loginUser(req, res) {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
+        if (
+            typeof email !== "string" ||
+            typeof password !== "string" ||
+            !email.trim() ||
+            !password
+        ) {
             return res.status(400).json({
                 message: "Email and password are required"
             });
@@ -132,11 +151,10 @@ async function loginUser(req, res) {
                 username: user.username,
                 email: user.email,
                 role: user.role || "viewer"
-
             }
         });
     } catch (error) {
-        console.error("Login error:", error);
+        console.error("Login error:", error.name);
 
         return res.status(500).json({
             message: "Unable to log in"
@@ -165,7 +183,7 @@ async function getUserProfile(req, res) {
             }
         });
     } catch (error) {
-        console.error("Profile error:", error);
+        console.error("Profile error:", error.name);
 
         return res.status(500).json({
             message: "Unable to retrieve profile"
@@ -178,7 +196,12 @@ async function changePassword(req, res) {
     try {
         const { currentPassword, newPassword } = req.body;
 
-        if (!currentPassword || !newPassword) {
+        if (
+            typeof currentPassword !== "string" ||
+            typeof newPassword !== "string" ||
+            !currentPassword ||
+            !newPassword
+        ) {
             return res.status(400).json({
                 message: "Current password and new password are required"
             });
@@ -219,7 +242,7 @@ async function changePassword(req, res) {
             message: "Password changed successfully"
         });
     } catch (error) {
-        console.error("Change password error:", error);
+        console.error("Change password error:", error.name);
 
         return res.status(500).json({
             message: "Unable to change password"
@@ -242,10 +265,7 @@ async function forgotPassword(req, res) {
             email: email.trim().toLowerCase()
         });
 
-        // Temporary debugging message
-        console.log("User found:", user ? "YES" : "NO");
-
-        // Avoid revealing whether an account exists
+        // Use the same response whether the account exists or not
         if (!user) {
             return res.status(200).json({
                 message: "If the account exists, password reset instructions will be sent"
@@ -268,17 +288,14 @@ async function forgotPassword(req, res) {
 
         await user.save();
 
-        // Development testing only
-        console.log(
-            "Password reset token (development only):",
-            resetToken
-        );
+        // Reset email delivery is not implemented here.
+        // Never log or return the reset token.
 
         return res.status(200).json({
             message: "If the account exists, password reset instructions will be sent"
         });
     } catch (error) {
-        console.error("Forgot password error:", error);
+        console.error("Forgot password error:", error.name);
 
         return res.status(500).json({
             message: "Unable to process password reset"
@@ -291,13 +308,18 @@ async function resetPassword(req, res) {
     try {
         const { token, newPassword } = req.body;
 
-        if (!token || !newPassword) {
+        if (
+            typeof token !== "string" ||
+            typeof newPassword !== "string" ||
+            !token ||
+            !newPassword
+        ) {
             return res.status(400).json({
                 message: "Reset token and new password are required"
             });
         }
 
-        if (typeof newPassword !== "string" || newPassword.length < 8) {
+        if (newPassword.length < 8) {
             return res.status(400).json({
                 message: "New password must be at least 8 characters long"
             });
@@ -334,7 +356,7 @@ async function resetPassword(req, res) {
             message: "Password reset successfully"
         });
     } catch (error) {
-        console.error("Reset password error:", error);
+        console.error("Reset password error:", error.name);
 
         return res.status(500).json({
             message: "Unable to reset password"

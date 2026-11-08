@@ -1,3 +1,4 @@
+
 const Joi = require("joi");
 
 const registerSchema = Joi.object({
@@ -17,7 +18,7 @@ const registerSchema = Joi.object({
         .min(8)
         .max(100)
         .required()
-});
+}).unknown(false);
 
 const loginSchema = Joi.object({
     email: Joi.string()
@@ -28,16 +29,17 @@ const loginSchema = Joi.object({
 
     password: Joi.string()
         .required()
-});
+}).unknown(false);
 
 const changePasswordSchema = Joi.object({
-    currentPassword: Joi.string().required(),
+    currentPassword: Joi.string()
+        .required(),
 
     newPassword: Joi.string()
         .min(8)
         .max(100)
         .required()
-});
+}).unknown(false);
 
 const forgotPasswordSchema = Joi.object({
     email: Joi.string()
@@ -45,16 +47,17 @@ const forgotPasswordSchema = Joi.object({
         .email()
         .lowercase()
         .required()
-});
+}).unknown(false);
 
 const resetPasswordSchema = Joi.object({
-    token: Joi.string().required(),
+    token: Joi.string()
+        .required(),
 
     newPassword: Joi.string()
         .min(8)
         .max(100)
         .required()
-});
+}).unknown(false);
 
 module.exports = {
     registerSchema,

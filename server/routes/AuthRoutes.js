@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const {
@@ -13,6 +14,12 @@ const authMiddleware = require("../middleware/authMiddleware");
 const validate = require("../middleware/validate");
 
 const {
+    loginLimiter,
+    registerLimiter,
+    passwordResetLimiter
+} = require("../middleware/rateLimitMiddleware");
+
+const {
     registerSchema,
     loginSchema,
     changePasswordSchema,
@@ -25,6 +32,7 @@ const router = express.Router();
 // Register
 router.post(
     "/register",
+    registerLimiter,
     validate(registerSchema),
     registerUser
 );
@@ -32,6 +40,7 @@ router.post(
 // Login
 router.post(
     "/login",
+    loginLimiter,
     validate(loginSchema),
     loginUser
 );
@@ -54,6 +63,7 @@ router.patch(
 // Forgot password
 router.post(
     "/forgot-password",
+    passwordResetLimiter,
     validate(forgotPasswordSchema),
     forgotPassword
 );
@@ -61,6 +71,7 @@ router.post(
 // Reset password
 router.post(
     "/reset-password",
+    passwordResetLimiter,
     validate(resetPasswordSchema),
     resetPassword
 );

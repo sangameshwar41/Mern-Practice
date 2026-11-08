@@ -1,3 +1,4 @@
+
 const Joi = require("joi");
 
 const courseSchema = Joi.object({
@@ -35,7 +36,8 @@ const courseSchema = Joi.object({
         .hex()
         .length(24)
         .allow(null, "")
-});
+
+}).unknown(false);
 
 const courseUpdateSchema = courseSchema
     .fork(
@@ -52,7 +54,8 @@ const courseUpdateSchema = courseSchema
             return field.optional();
         }
     )
-    .min(1);
+    .min(1)
+    .unknown(false);
 
 module.exports = {
     courseSchema,
